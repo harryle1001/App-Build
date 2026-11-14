@@ -1,0 +1,273 @@
+<title>Ướm Thử</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: một cột kiểu app điện thoại. Sân khấu ảnh 3:4 là trung tâm, vuốt ngang để đổi mẫu đồ; bên dưới là nhóm đồ, màu, form, người mẫu */
+:root{
+  --bg:#efefec; --surface:#fbfbf9; --ink:#18191a; --muted:#686b66; --line:#dcddd7;
+  --accent:#34452f; --accent-ink:#f4f6f0; --stage:#e3e3df; --glass:rgba(22,24,20,.62);
+  --display:'Familjen Grotesk','Inter',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121311; --surface:#1b1c1a; --ink:#eeefe9; --muted:#9a9d95; --line:#2c2e2a;
+  --accent:#b9c9a6; --accent-ink:#152012; --stage:#232421; --glass:rgba(10,11,9,.66); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#121311; --surface:#1b1c1a; --ink:#eeefe9; --muted:#9a9d95; --line:#2c2e2a;
+  --accent:#b9c9a6; --accent-ink:#152012; --stage:#232421; --glass:rgba(10,11,9,.66); color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 28px}
+.app{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font:700 28px/1 var(--display);margin:0;letter-spacing:-.025em}
+.sub{font-size:12px;color:var(--muted);letter-spacing:.04em}
+h2{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+
+.stage{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:20px;overflow:hidden;background:var(--stage);
+  touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.stage img{position:absolute;-webkit-user-drag:none;pointer-events:none}
+.stage .photo{inset:0;width:100%;height:100%;object-fit:cover}
+.layer{transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .3s;filter:drop-shadow(0 3px 5px rgba(0,0,0,.18))}
+.layer.out-l{transform:translateX(-45%) rotate(-3deg);opacity:0}
+.layer.out-r{transform:translateX(45%) rotate(3deg);opacity:0}
+.layer.in-l{transition:none;transform:translateX(-45%);opacity:0}
+.layer.in-r{transition:none;transform:translateX(45%);opacity:0}
+.ai{inset:0;width:100%;height:100%;object-fit:cover;z-index:5}
+.badge{position:absolute;top:10px;left:10px;z-index:6;background:var(--glass);color:#fff;font:500 11.5px var(--body);padding:6px 10px;border-radius:99px;backdrop-filter:blur(8px);letter-spacing:.02em}
+.badge.ai-on{background:#2f6b45}
+.caption{position:absolute;left:10px;right:10px;bottom:10px;z-index:6;display:flex;justify-content:space-between;align-items:flex-end;gap:8px;pointer-events:none}
+.caption .card{background:var(--glass);color:#fff;border-radius:14px;padding:8px 12px;backdrop-filter:blur(8px);min-width:0}
+.caption b{display:block;font:600 14.5px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.caption small{font-size:12px;opacity:.85}
+.caption .count{font:600 12px var(--body);font-variant-numeric:tabular-nums}
+.nav{position:absolute;top:50%;z-index:6;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:0;background:var(--glass);color:#fff;font-size:20px;cursor:pointer;backdrop-filter:blur(8px)}
+.nav.prev{left:8px}.nav.next{right:8px}
+.hint{position:absolute;inset:auto 0 64px;text-align:center;z-index:6;color:#fff;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.6);transition:opacity .6s}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
+.seg button{border:0;background:none;color:var(--muted);font:600 13.5px var(--body);padding:10px 6px;border-radius:10px;cursor:pointer;position:relative}
+.seg button[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
+.seg button .dot{position:absolute;top:6px;right:8px;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+
+.colors{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--accent)}
+.colname{font-size:13px;color:var(--muted);margin-left:2px}
+
+.strip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
+.tile{flex:0 0 92px;scroll-snap-align:start;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:6px 6px 8px;cursor:pointer;
+  display:flex;flex-direction:column;gap:5px;align-items:center;color:var(--ink);font:500 11.5px/1.25 var(--body);text-align:center}
+.tile img{width:100%;height:104px;object-fit:contain;border-radius:8px;background:#fff}
+.tile[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.tile.none{justify-content:center;color:var(--muted)}
+.models .tile{flex-basis:76px}
+.models .tile img{height:96px;object-fit:cover;background:var(--stage)}
+.tile.add{border-style:dashed;justify-content:center;color:var(--accent)}
+.tile.add b{font:600 26px/1 var(--display)}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:10px}
+.ctl label{display:flex;flex-direction:column;gap:4px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ctl input{width:100%;accent-color:var(--accent)}
+.note{font-size:13px;color:var(--muted);line-height:1.55;margin:0}
+button:focus-visible,.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=file]{display:none}
+@media (prefers-reduced-motion:reduce){.layer{transition:none}}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Ướm Thử</h1>
+    <span class="sub">Linen · Măng tô · Đầm</span>
+  </header>
+
+  <div class="stage" id="stage" aria-label="Khung ướm đồ. Vuốt trái phải để đổi mẫu">
+    <img class="photo" id="photo" alt="">
+    <div id="layers"></div>
+    <img class="ai" id="aiImg" alt="Ảnh AI ghép đồ" hidden>
+    <span class="badge" id="badge">Xem nhanh · đặt đồ 2D</span>
+    <button class="nav prev" id="prev" type="button" aria-label="Mẫu trước">‹</button>
+    <button class="nav next" id="next" type="button" aria-label="Mẫu sau">›</button>
+    <div class="hint" id="hint">← Vuốt để đổi mẫu →</div>
+    <div class="caption"><div class="card"><b id="capName"></b><small id="capColor"></small></div><div class="card count" id="capCount"></div></div>
+  </div>
+
+  <div class="seg" role="tablist" id="seg"></div>
+
+  <section>
+    <h2>Màu</h2>
+    <div class="colors" id="colors"></div>
+  </section>
+
+  <section>
+    <h2 id="formTitle">Form</h2>
+    <div class="strip" id="forms"></div>
+  </section>
+
+  <section>
+    <h2>Người mẫu</h2>
+    <div class="strip models" id="models"></div>
+  </section>
+
+  <details>
+    <summary>Chỉnh cho vừa người</summary>
+    <div class="ctl">
+      <label>Cỡ<input type="range" id="adjS" min="80" max="125" value="100"></label>
+      <label>Lên / xuống<input type="range" id="adjY" min="-8" max="8" step="0.5" value="0"></label>
+    </div>
+    <p class="note" style="margin-top:8px">Chỉnh áp dụng cho nhóm đồ đang chọn trên người mẫu này.</p>
+  </details>
+
+  <p class="note">Đồ được dựng 3D bằng Blender rồi đặt lên ảnh người mẫu theo vai, eo và mắt cá chân. Khi có ảnh AI ghép cho đúng người và đúng món, khung sẽ tự chuyển sang ảnh AI.</p>
+</div>
+<input type="file" id="fMe" accept="image/*" capture="user">
+
+<script src="data.js"></script>
+<script>
+(function(){
+  const D = window.WARDROBE, $ = id => document.getElementById(id);
+  const CATS = [['quan','Quần linen'],['mangto','Măng tô'],['dam','Đầm']];
+  const Z = {quan:1, dam:2, mangto:3};
+  const byCat = c => D.garments.filter(g => g.cat === c);
+  const models = D.models.map(m => ({...m, src:'m/'+m.id+'.webp', thumb:'m/'+m.id+'_t.webp'}));
+  const S = {
+    model: models[0].id, cat:'quan',
+    outfit: {quan:{key:byCat('quan')[0].key, color:byCat('quan')[0].colors[0].id}, mangto:null, dam:null},
+    adj: {}
+  };
+  const G = key => D.garments.find(g => g.key === key);
+  const M = () => models.find(m => m.id === S.model);
+  const adj = (cat) => S.adj[S.model+'|'+cat] || (S.adj[S.model+'|'+cat] = {s:100, y:0});
+
+  function fit(g, kp, a2){
+    const a = g.anchor; let h, w, cxA;
+    if (a.type === 'waist'){
+      h = (kp.ay - kp.wy) / a.ref * g.hcm;
+      w = (kp.wr - kp.wl) * 1.0 / (a.r - a.l);
+    } else {
+      h = (kp.ay - kp.sy) / a.ref * g.hcm;
+      w = (kp.sr - kp.sl) * a.frac / (a.r - a.l);
+    }
+    const nat = g.aspect * h * 4 / 3;
+    w = Math.min(nat * 1.15, Math.max(nat * 0.75, w));
+    const k = a2.s / 100; w *= k; h *= k;
+    const ay = a.type === 'waist' ? kp.wy : kp.sy + 1.5;
+    return {left: kp.cx - w * (a.l + a.r) / 2, top: ay - a.y * h + a2.y, width: w, height: h};
+  }
+
+  const layerEls = {};
+  function layerEl(cat){
+    if (!layerEls[cat]){ const im = document.createElement('img'); im.className = 'layer'; im.alt = ''; im.style.zIndex = Z[cat]; $('layers').appendChild(im); layerEls[cat] = im; }
+    return layerEls[cat];
+  }
+  function placeLayer(cat){
+    const o = S.outfit[cat], el = layerEl(cat);
+    if (!o){ el.hidden = true; return; }
+    const g = G(o.key), p = fit(g, M().kp, adj(cat));
+    el.hidden = false; el.src = 'g/'+o.key+'__'+o.color+'.webp';
+    Object.assign(el.style, {left:p.left+'%', top:p.top+'%', width:p.width+'%', height:p.height+'%'});
+  }
+  function aiKey(){
+    const worn = CATS.map(c => c[0]).filter(c => S.outfit[c]);
+    if (worn.length !== 1) return null;
+    const o = S.outfit[worn[0]], k = S.model+'__'+o.key+'__'+o.color;
+    return D.ai.includes(k) ? k : null;
+  }
+  function render(){
+    $('photo').src = M().src;
+    CATS.forEach(([c]) => placeLayer(c));
+    const k = aiKey();
+    $('aiImg').hidden = !k; if (k) $('aiImg').src = 'ai/'+k+'.webp';
+    $('badge').textContent = k ? 'AI ghép' : 'Xem nhanh · đặt đồ 2D';
+    $('badge').classList.toggle('ai-on', !!k);
+    const o = S.outfit[S.cat], list = byCat(S.cat);
+    if (o){ const g = G(o.key), col = g.colors.find(c => c.id === o.color);
+      $('capName').textContent = g.name; $('capColor').textContent = col.name;
+      $('capCount').textContent = (list.findIndex(x => x.key === o.key) + 1) + ' / ' + list.length;
+    } else { $('capName').textContent = 'Chưa chọn ' + CATS.find(c => c[0] === S.cat)[1].toLowerCase(); $('capColor').textContent = 'Vuốt để thử'; $('capCount').textContent = '0 / ' + list.length; }
+    renderSeg(); renderColors(); renderForms(); renderModels();
+    const a = adj(S.cat); $('adjS').value = a.s; $('adjY').value = a.y;
+  }
+
+  function renderSeg(){
+    $('seg').innerHTML = '';
+    CATS.forEach(([c, label]) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role','tab');
+      b.setAttribute('aria-selected', S.cat === c); b.textContent = label;
+      if (S.outfit[c]) { const d = document.createElement('span'); d.className = 'dot'; b.appendChild(d); }
+      b.onclick = () => { S.cat = c; render(); }; $('seg').appendChild(b); });
+  }
+  function renderColors(){
+    const o = S.outfit[S.cat], box = $('colors'); box.innerHTML = '';
+    const g = o ? G(o.key) : byCat(S.cat)[0];
+    g.colors.forEach(col => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sw';
+      b.style.background = col.hex; b.title = col.name; b.setAttribute('aria-label', col.name);
+      b.setAttribute('aria-pressed', !!o && o.color === col.id);
+      b.onclick = () => { wear(S.cat, g.key, col.id); }; box.appendChild(b); });
+    const n = document.createElement('span'); n.className = 'colname';
+    n.textContent = o ? g.colors.find(c => c.id === o.color).name : ''; box.appendChild(n);
+  }
+  function renderForms(){
+    const box = $('forms'), o = S.outfit[S.cat]; box.innerHTML = '';
+    $('formTitle').textContent = 'Form ' + CATS.find(c => c[0] === S.cat)[1].toLowerCase();
+    const none = document.createElement('button'); none.type = 'button'; none.className = 'tile none'; none.textContent = 'Bỏ món này';
+    none.setAttribute('aria-pressed', !o); none.onclick = () => { S.outfit[S.cat] = null; render(); }; box.appendChild(none);
+    byCat(S.cat).forEach(g => { const col = o && o.key === g.key ? o.color : (o ? (g.colors.find(c => c.id === o.color) || g.colors[0]).id : g.colors[0].id);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tile'; b.setAttribute('aria-pressed', !!o && o.key === g.key);
+      b.innerHTML = '<img alt="" loading="lazy"><span></span>'; b.firstChild.src = 'g/'+g.key+'__'+col+'_t.webp'; b.lastChild.textContent = g.name;
+      b.onclick = () => wear(S.cat, g.key, col); box.appendChild(b); });
+  }
+  function renderModels(){
+    const box = $('models'); box.innerHTML = '';
+    models.forEach(m => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tile'; b.setAttribute('aria-pressed', S.model === m.id);
+      b.innerHTML = '<img alt=""><span></span>'; b.firstChild.src = m.thumb; b.lastChild.textContent = m.label;
+      b.onclick = () => { S.model = m.id; render(); }; box.appendChild(b); });
+    const add = document.createElement('button'); add.type = 'button'; add.className = 'tile add'; add.innerHTML = '<b>+</b>Ảnh của tôi';
+    add.onclick = () => $('fMe').click(); box.appendChild(add);
+  }
+
+  function wear(cat, key, color){
+    if (cat === 'dam') S.outfit.quan = null;
+    if (cat === 'quan') S.outfit.dam = null;
+    S.outfit[cat] = {key, color}; render();
+  }
+
+  // Vuốt / mũi tên: đổi form trong nhóm đang chọn, giữ màu nếu form mới có màu đó
+  let busy = false;
+  function step(dir){
+    if (busy) return; const list = byCat(S.cat), o = S.outfit[S.cat];
+    let i = o ? list.findIndex(g => g.key === o.key) : -1;
+    i = (i + dir + list.length) % list.length; const g = list[i];
+    const color = o && g.colors.some(c => c.id === o.color) ? o.color : g.colors[0].id;
+    const el = layerEl(S.cat); busy = true;
+    if (o){ el.classList.add(dir > 0 ? 'out-l' : 'out-r'); }
+    setTimeout(() => {
+      el.classList.remove('out-l','out-r'); el.classList.add(dir > 0 ? 'in-r' : 'in-l');
+      wear(S.cat, g.key, color);
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.remove('in-r','in-l'); busy = false; }));
+    }, o ? 220 : 0);
+    $('hint').style.opacity = 0;
+  }
+  $('prev').onclick = () => step(-1); $('next').onclick = () => step(1);
+  let sx = null, sy = null;
+  const st = $('stage');
+  st.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; sx = e.clientX; sy = e.clientY; });
+  st.addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1); });
+  st.addEventListener('pointercancel', () => { sx = null; });
+  document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); });
+
+  $('adjS').oninput = e => { adj(S.cat).s = +e.target.value; placeLayer(S.cat); };
+  $('adjY').oninput = e => { adj(S.cat).y = +e.target.value; placeLayer(S.cat); };
+
+  // Ảnh của tôi: dùng điểm dáng người mặc định cho ảnh đứng thẳng, toàn thân
+  $('fMe').onchange = e => { const f = e.target.files[0]; if (!f) return; e.target.value = '';
+    const url = URL.createObjectURL(f); const ex = models.find(m => m.id === 'me');
+    const me = {id:'me', label:'Ảnh của tôi', src:url, thumb:url, kp:{sy:17, sl:33, sr:67, wy:38, wl:39, wr:61, ay:89, cx:50}};
+    if (ex) Object.assign(ex, me); else models.unshift(me);
+    S.model = 'me'; render(); };
+
+  render();
+  setTimeout(() => { $('hint').style.opacity = 0; }, 4000);
+})();
+</script>
